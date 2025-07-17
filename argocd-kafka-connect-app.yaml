@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka-connect-cluster
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: kafka-connect-cluster
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/suhyun-guri/k8s_study
+    path: .
+    targetRevision: HEAD
+    directory:
+      include: kafka-connect.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+  # Kafka 클러스터가 먼저 실행되어야 함
+  info:
+    - name: "Dependencies"
+      value: "Requires Kafka cluster (my-cluster) to be running first"

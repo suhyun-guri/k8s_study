@@ -757,3 +757,59 @@ spec:
             requests:
               cpu: 200m
               memory: 384Mi
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi-kafka-operator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://strimzi.io/charts/
+    chart: strimzi-kafka-operator
+    targetRevision: 0.45.0 # 최신 버전
+    helm:
+      releaseName: strimzi
+      ignoreMissingValueFiles: true
+      # Strimzi Operator가 여러 네임스페이스를 감시하도록 설정
+      parameters:
+        - name: watchNamespaces
+          value: "kafka-connect,kafka"
+        - name: env[0].name
+          value: "STRIMZI_NAMESPACE"
+        - name: env[0].value
+          value: "kafka-connect,kafka"
+  destination:
+    namespace: kafka-connect
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# RBAC 권한 설정을 위한 Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi-rbac
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/suhyun-guri/k8s_study
+    path: .
+    targetRevision: HEAD
+    plugin:
+      name: kustomize
+  destination:
+    namespace: kafka
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

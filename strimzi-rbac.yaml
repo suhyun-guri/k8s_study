@@ -1,0 +1,99 @@
+---
+# kafka 네임스페이스에서 Strimzi Operator가 작동하기 위한 RBAC 설정
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-cluster-operator-namespaced
+  namespace: kafka
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: kafka-connect
+roleRef:
+  kind: ClusterRole
+  name: strimzi-cluster-operator-namespaced
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-cluster-operator-watched
+  namespace: kafka
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: kafka-connect
+roleRef:
+  kind: ClusterRole
+  name: strimzi-cluster-operator-watched
+  apiGroup: rbac.authorization.k8s.io
+---
+# Entity Operator를 위한 추가 권한
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-entity-operator
+  namespace: kafka
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: kafka-connect
+roleRef:
+  kind: ClusterRole
+  name: strimzi-entity-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Kafka Broker를 위한 추가 권한
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-kafka-broker
+  namespace: kafka
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: kafka-connect
+roleRef:
+  kind: ClusterRole
+  name: strimzi-kafka-broker
+  apiGroup: rbac.authorization.k8s.io
+---
+# Strimzi Operator가 kafka 네임스페이스에서 RBAC 권한을 관리할 수 있도록 하는 추가 권한
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kafka
+  name: strimzi-rbac-manager
+  labels:
+    app: strimzi
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: kafka
+  name: strimzi-rbac-manager-binding
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: kafka-connect
+roleRef:
+  kind: Role
+  name: strimzi-rbac-manager
+  apiGroup: rbac.authorization.k8s.io

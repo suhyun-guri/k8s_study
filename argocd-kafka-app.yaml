@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka-cluster
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: kafka-cluster
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/suhyun-guri/k8s_study
+    path: .
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+  # Strimzi Operator가 먼저 설치되어야 함
+  info:
+    - name: "Dependencies"
+      value: "Requires Strimzi Operator to be installed first"
